@@ -5,11 +5,11 @@ const MATERIALS = {
     valueLabel: "Rm [MPa]",
     defaultValue: 700,
     v0Bands: [
-      { min: 340, max: 500, values: { "P01-P10": 280, P20: 210, "P30-P40": 115, HSS: 65 } },
-      { min: 500, max: 700, values: { "P01-P10": 180, P20: 120, "P30-P40": 75, HSS: 35 } },
-      { min: 700, max: 900, values: { "P01-P10": 120, P20: 85, "P30-P40": 45, HSS: 25 } },
-      { min: 900, max: 1100, values: { "P01-P10": 90, P20: 65, "P30-P40": 35 } },
-      { min: 1100, max: 1250, values: { "P01-P10": 75, P20: 50, "P30-P40": 30 } },
+      { min: 340, max: 500, values: { "P1": 280, "P2": 210, "P3-P4": 115, HSS: 65 } },
+      { min: 500, max: 700, values: { "P1": 180, "P2": 120, "P3-P4": 75, HSS: 35 } },
+      { min: 700, max: 900, values: { "P1": 120, "P2": 85, "P3-P4": 45, HSS: 25 } },
+      { min: 900, max: 1100, values: { "P1": 90, "P2": 65, "P3-P4": 35 } },
+      { min: 1100, max: 1250, values: { "P1": 75, "P2": 50, "P3-P4": 30 } },
     ],
   },
   ghisa: {
@@ -18,10 +18,10 @@ const MATERIALS = {
     valueLabel: "HB",
     defaultValue: 200,
     v0Bands: [
-      { min: 100, max: 150, values: { "M20-K10": 200, HSS: 40 } },
-      { min: 150, max: 200, values: { "M20-K10": 130, HSS: 30 } },
-      { min: 200, max: 250, values: { "M20-K10": 80, HSS: 18 } },
-      { min: 250, max: 300, values: { "M20-K10": 45 } },
+      { min: 100, max: 150, values: { "K1": 200, HSS: 40 } },
+      { min: 150, max: 200, values: { "K1": 130, HSS: 30 } },
+      { min: 200, max: 250, values: { "K1": 80, HSS: 18 } },
+      { min: 250, max: 300, values: { "K1": 45 } },
     ],
   },
   alluminio: {
@@ -30,9 +30,9 @@ const MATERIALS = {
     valueLabel: "HB",
     defaultValue: 80,
     v0Bands: [
-      { min: 0, max: 50, values: { K20: 650, HSS: 120 } },
-      { min: 50, max: 80, values: { "M10-M20": 500, HSS: 100 } },
-      { min: 80, max: 100, values: { "M10-M20": 450, HSS: 90 } },
+      { min: 0, max: 50, values: { "N1": 650, HSS: 120 } },
+      { min: 50, max: 80, values: { "N1": 500, HSS: 100 } },
+      { min: 80, max: 100, values: { "N1": 450, HSS: 90 } },
     ],
   },
   rame: {
@@ -40,21 +40,21 @@ const MATERIALS = {
     family: "nonFerrosi",
     valueLabel: "HB",
     defaultValue: 80,
-    v0Bands: [{ min: 0, max: 200, values: { K20: 300, HSS: 45 } }],
+    v0Bands: [{ min: 0, max: 200, values: { "N3": 300, HSS: 45 } }],
   },
   ottone: {
     label: "Ottone",
     family: "nonFerrosi",
     valueLabel: "HB",
     defaultValue: 100,
-    v0Bands: [{ min: 0, max: 200, values: { K20: 400, HSS: 100 } }],
+    v0Bands: [{ min: 0, max: 200, values: { "N3": 400, HSS: 100 } }],
   },
   bronzo: {
     label: "Bronzo",
     family: "nonFerrosi",
     valueLabel: "HB",
     defaultValue: 100,
-    v0Bands: [{ min: 0, max: 200, values: { K20: 400, HSS: 60 } }],
+    v0Bands: [{ min: 0, max: 200, values: { "N3": 400, HSS: 60 } }],
   },
 };
 
@@ -70,13 +70,13 @@ const E_BY_TOOL_AND_MATERIAL = {
 };
 
 const Y_BY_INSERT_AND_MATERIAL = {
-  "P01-P10": { acciaio: 0.3 },
-  P20: { acciaio: 0.3 },
-  "P30-P40": { acciaio: 0.167 },
-  "K10-K20": { ghisa: 0.25 },
-  "M20-K10": { ghisa: 0.25 },
-  "M10-M20": { alluminio: 0.41, bronzo: 0.25, ottone: 0.25 },
-  K20: { alluminio: 0.41, rame: 0.12, bronzo: 0.25, ottone: 0.25 },
+  "P1": { acciaio: 0.3 },
+  "P2": { acciaio: 0.3 },
+  "P3-P4": { acciaio: 0.167 },
+  "K1": { ghisa: 0.25 },
+  "K1": { ghisa: 0.25 },
+  "N1": { alluminio: 0.41, bronzo: 0.25, ottone: 0.25 },
+  "N1": { alluminio: 0.41, rame: 0.12, bronzo: 0.25, ottone: 0.25 },
   HSS: { acciaio: 0.15, ghisa: 0.25, rame: 0.12, alluminio: 0.41, bronzo: 0.22, ottone: 0.22 },
 };
 
@@ -146,7 +146,7 @@ const K1_TABLES = {
   },
 };
 
-const INSERT_OPTIONS = ["P01-P10", "P20", "P30-P40", "K20", "K10-K20", "M20-K10", "M10-M20", "HSS"];
+const INSERT_OPTIONS = ["P1", "P2", "P3-P4", "K1", "N1", "N3", "HSS"];
 const TOOL_OPTIONS = [
   { value: "carburi", label: "Carburi metallici" },
   { value: "HSS", label: "Acciaio super rapido" },
@@ -180,6 +180,8 @@ const segmentsBody = document.getElementById("segments-body");
 const resultsGrid = document.getElementById("results-grid");
 const coefficientsBody = document.getElementById("coefficients-body");
 const segmentResultsBody = document.getElementById("segment-results-body");
+const roughPassDetailsBody = document.getElementById("rough-pass-details-body");
+const finishPassDetailsBody = document.getElementById("finish-pass-details-body");
 const messages = document.getElementById("messages");
 
 bootstrap();
@@ -197,8 +199,8 @@ function bootstrap() {
 
   roughToolMaterial.value = "carburi";
   finishToolMaterial.value = "carburi";
-  roughInsertCode.value = "P20";
-  finishInsertCode.value = "P20";
+  roughInsertCode.value = "P2";
+  finishInsertCode.value = "P2";
   lubrication.value = "media";
   approachAngle.value = "45";
   rakeAngle.value = "10";
@@ -265,6 +267,8 @@ function calculateAndRender() {
     resultsGrid.innerHTML = "";
     coefficientsBody.innerHTML = "";
     segmentResultsBody.innerHTML = "";
+    roughPassDetailsBody.innerHTML = "";
+    finishPassDetailsBody.innerHTML = "";
     return;
   }
 
@@ -276,6 +280,7 @@ function calculateAndRender() {
   renderCards(data, rough, finish, geometry);
   renderCoefficientTable(rough, finish);
   renderSegmentTable(rough.segmentPasses, finish.segmentPasses);
+  renderPassDetailsTable(rough, finish);
 }
 
 function readFormData() {
@@ -340,6 +345,24 @@ function validateData(data) {
     }
   });
 
+  if (data.finishing.depth > data.finishAllowance) {
+    messages.push(
+      `Attenzione: la profondita di passata finitura (${formatNumber(data.finishing.depth, 3)} mm) non puo superare il sovrametallo radiale per finitura (${formatNumber(data.finishAllowance, 3)} mm).`
+    );
+  } else if (data.finishing.depth > 0 && data.finishAllowance > 0) {
+    const ratio = data.finishAllowance / data.finishing.depth;
+    if (Math.abs(ratio - Math.round(ratio)) > 1e-9) {
+      const validValues = [];
+      for (let n = 1; n <= 10; n++) {
+        const candidate = data.finishAllowance / n;
+        if (candidate >= 0.01) validValues.push(formatNumber(candidate, 3));
+      }
+      messages.push(
+        `Attenzione: la profondita di passata finitura (${formatNumber(data.finishing.depth, 3)} mm) deve essere una frazione intera del sovrametallo (${formatNumber(data.finishAllowance, 3)} mm). Valori ammessi: ${validValues.join(" mm, ")} mm.`
+      );
+    }
+  }
+
   return { valid: messages.length === 0, messages };
 }
 
@@ -361,6 +384,14 @@ function computeOperation(label, data, operation) {
   const cuttingPower = (cuttingForce * cuttingSpeed) / 60000;
   const segmentPasses = computeSegmentPasses(label, data, operation, cuttingSpeed);
   const totalTimePerPiece = segmentPasses.reduce((sum, segment) => sum + segment.timeMin, 0);
+
+  segmentPasses.forEach((segment) => {
+    segment.passDetails.forEach((pass) => {
+      const passQ = pass.passDepth * operation.feed;
+      pass.cuttingForce = k1 * Math.pow(passQ, r) * Math.pow(pass.passDepth / (5 * operation.feed), h);
+      pass.cuttingPower = (pass.cuttingForce * cuttingSpeed) / 60000;
+    });
+  });
 
   return {
     label,
@@ -398,7 +429,7 @@ function computeSegmentPasses(label, data, operation, cuttingSpeed) {
       currentDiameter =
         segmentIndex === data.segments.length - 1
           ? data.stockDiameter
-          : roughDiameters[segmentIndex + 1];
+          : data.segments[segmentIndex + 1].diameter;
     } else {
       targetDiameter = segment.diameter;
       currentDiameter = Math.min(data.stockDiameter, segment.diameter + 2 * data.finishAllowance);
@@ -409,12 +440,17 @@ function computeSegmentPasses(label, data, operation, cuttingSpeed) {
     const passes = diametralRemoval === 0 ? 0 : Math.ceil(diametralRemoval / passCapacity);
     let timeMin = 0;
     let runningDiameter = currentDiameter;
+    const passDetails = [];
 
     for (let index = 0; index < passes; index += 1) {
       const nextDiameter = Math.max(targetDiameter, runningDiameter - passCapacity);
       const effectiveDiameter = Math.max(segment.diameter, (runningDiameter + nextDiameter) / 2);
       const spindleSpeed = (1000 * cuttingSpeed) / (Math.PI * effectiveDiameter);
+      const passDepth = index < passes - 1
+        ? operation.depth
+        : (diametralRemoval - (passes - 1) * 2 * operation.depth) / 2;
       timeMin += (segment.length + data.approachExtra) / (spindleSpeed * operation.feed);
+      passDetails.push({ passDepth, spindleSpeed });
       runningDiameter = nextDiameter;
     }
 
@@ -422,6 +458,8 @@ function computeSegmentPasses(label, data, operation, cuttingSpeed) {
       name: segment.name,
       passes,
       timeMin,
+      passDepths: passDetails.map((d) => d.passDepth),
+      passDetails,
     };
   });
 }
@@ -481,64 +519,42 @@ function renderMessages(items) {
 function renderCards(data, rough, finish, geometry) {
   const cards = [
     {
-      title: "Sgrossatura",
+      title: "Bilancio lavorazione lotto",
       rows: [
-        ["Velocita di taglio", `${formatNumber(rough.cuttingSpeed)} m/min`],
-        ["Forza di taglio", `${formatNumber(rough.cuttingForce)} N`],
-        ["Potenza di taglio", `${formatNumber(rough.cuttingPower)} kW`],
-        ["Tempo per pezzo", `${formatNumber(rough.totalTimePerPiece)} min`],
-        ["Tempo lotto", `${formatNumber(rough.totalTimeLot)} min`],
-      ],
-    },
-    {
-      title: "Finitura",
-      rows: [
-        ["Velocita di taglio", `${formatNumber(finish.cuttingSpeed)} m/min`],
-        ["Forza di taglio", `${formatNumber(finish.cuttingForce)} N`],
-        ["Potenza di taglio", `${formatNumber(finish.cuttingPower)} kW`],
-        ["Tempo per pezzo", `${formatNumber(finish.totalTimePerPiece)} min`],
-        ["Tempo lotto", `${formatNumber(finish.totalTimeLot)} min`],
-      ],
-    },
-    {
-      title: "Bilancio lavorazione",
-      rows: [
+        ["Pezzi", `${data.lotSize}`],
+        ["Tempo sgrossatura / pezzo", `${formatNumber(rough.totalTimePerPiece)} min`],
+        ["Tempo sgrossatura lotto", `${formatNumber(rough.totalTimeLot)} min`],
+        ["Tempo finitura / pezzo", `${formatNumber(finish.totalTimePerPiece)} min`],
+        ["Tempo finitura lotto", `${formatNumber(finish.totalTimeLot)} min`],
         ["Tempo totale per pezzo", `${formatNumber(rough.totalTimePerPiece + finish.totalTimePerPiece)} min`],
         ["Tempo totale lotto", `${formatNumber(rough.totalTimeLot + finish.totalTimeLot)} min`],
         ["Lunghezza totale pezzo", `${formatNumber(geometry.stockLength)} mm`],
         ["Materiale asportato", `${formatNumber(geometry.removedVolumeCm3)} cm3`],
         ["Peso asportato", `${formatNumber(geometry.removedMassKg)} kg/pezzo`],
-      ],
-    },
-    {
-      title: "Lotto",
-      rows: [
-        ["Pezzi", `${data.lotSize}`],
-        ["Peso totale asportato", `${formatNumber(geometry.removedMassLotKg)} kg`],
-        ["Potenza macchina", `${formatNumber(data.machinePower)} kW`],
-        ["Utensile", data.toolType],
-        ["Lubrificazione", LUBRICATION_OPTIONS.find((entry) => entry.value === data.lubrication).label],
+        ["Peso totale asportato lotto", `${formatNumber(geometry.removedMassLotKg)} kg`],
       ],
     },
   ];
 
   resultsGrid.innerHTML = cards
     .map(
-      (card) => `
-      <article class="metric-card">
-        <h3>${card.title}</h3>
-        ${card.rows
-          .map(
-            ([label, value]) => `
+      (card, cardIndex) => {
+        const isFull = cards.length === 1 || (cards.length % 2 !== 0 && cardIndex === cards.length - 1);
+        const metricLines = card.rows
+          .map(([label, value]) => `
             <div class="metric-line">
               <span class="metric-label">${label}</span>
               <span class="metric-value">${value}</span>
             </div>
-          `
-          )
-          .join("")}
-      </article>
-    `
+          `)
+          .join("");
+        return `
+          <article class="metric-card${isFull ? " full-width" : ""}">
+            <h3>${card.title}</h3>
+            <div class="metric-body">${metricLines}</div>
+          </article>
+        `;
+      }
     )
     .join("");
 }
@@ -578,6 +594,7 @@ function renderSegmentTable(roughSegments, finishSegments) {
         <tr>
           <td>${segment.name}</td>
           <td>${segment.passes}</td>
+          <td>${segment.passDepths.length === 0 ? "-" : segment.passDepths.map((d) => formatNumber(d)).join("<br>")}</td>
           <td>${formatNumber(segment.timeMin)}</td>
           <td>${finish.passes}</td>
           <td>${formatNumber(finish.timeMin)}</td>
@@ -585,6 +602,30 @@ function renderSegmentTable(roughSegments, finishSegments) {
       `;
     })
     .join("");
+}
+
+function renderPassDetailsTable(rough, finish) {
+  roughPassDetailsBody.innerHTML = buildPassRows(rough.segmentPasses, rough.cuttingSpeed);
+  finishPassDetailsBody.innerHTML = buildPassRows(finish.segmentPasses, finish.cuttingSpeed);
+}
+
+function buildPassRows(segments, cuttingSpeed) {
+  return segments.flatMap((segment) => {
+    if (segment.passDetails.length === 0) {
+      return [`<tr><td>${segment.name}</td><td colspan="6">—</td></tr>`];
+    }
+    return segment.passDetails.map((pass, i) => `
+      <tr>
+        <td>${i === 0 ? segment.name : ""}</td>
+        <td>${i + 1}</td>
+        <td>${formatNumber(pass.passDepth)}</td>
+        <td>${formatNumber(cuttingSpeed)}</td>
+        <td>${formatNumber(pass.spindleSpeed, 0)}</td>
+        <td>${formatNumber(pass.cuttingForce)}</td>
+        <td>${formatNumber(pass.cuttingPower, 3)}</td>
+      </tr>
+    `);
+  }).join("");
 }
 
 function lookupV0(materialKey, materialValue, insertCode, toolMaterial) {

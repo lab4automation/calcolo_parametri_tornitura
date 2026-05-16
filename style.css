@@ -386,6 +386,20 @@ legend {
   font-size: 1rem;
 }
 
+.metric-card.full-width {
+  grid-column: 1 / -1;
+}
+
+.metric-card.full-width .metric-body {
+  column-count: 2;
+  column-gap: 40px;
+  column-rule: 1px solid rgba(216, 200, 179, 0.7);
+}
+
+.metric-card.full-width .metric-line {
+  break-inside: avoid;
+}
+
 .metric-line {
   display: flex;
   justify-content: space-between;
