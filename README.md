@@ -20,4 +20,4 @@ Apri `index.html` nel browser.
 
 ## Nota
 
-Il progetto è pensato come base evolutiva per gestire in futuro geometrie piu generiche rispetto a un semplice albero a 4 tratti cilindrici.
+Il progetto è pensato come base evolutiva per gestire in futuro geometrie piu complesse rispetto a un semplice albero a 4 tratti cilindrici.
