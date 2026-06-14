@@ -174,8 +174,10 @@ const finishToolMaterial = document.getElementById("finishToolMaterial");
 const roughInsertCode = document.getElementById("roughInsertCode");
 const finishInsertCode = document.getElementById("finishInsertCode");
 const lubrication = document.getElementById("lubrication");
-const approachAngle = document.getElementById("approachAngle");
-const rakeAngle = document.getElementById("rakeAngle");
+const roughRakeAngle = document.getElementById("roughRakeAngle");
+const finishRakeAngle = document.getElementById("finishRakeAngle");
+const roughApproachAngle = document.getElementById("roughApproachAngle");
+const finishApproachAngle = document.getElementById("finishApproachAngle");
 const segmentsBody = document.getElementById("segments-body");
 const resultsGrid = document.getElementById("results-grid");
 const coefficientsBody = document.getElementById("coefficients-body");
@@ -193,8 +195,10 @@ function bootstrap() {
   populateSelect(roughInsertCode, INSERT_OPTIONS.map((value) => ({ value, label: value })));
   populateSelect(finishInsertCode, INSERT_OPTIONS.map((value) => ({ value, label: value })));
   populateSelect(lubrication, LUBRICATION_OPTIONS);
-  populateSelect(approachAngle, ANGLES.map((value) => ({ value: String(value), label: `${value}°` })));
-  populateSelect(rakeAngle, RAKE_ANGLES.map((value) => ({ value: String(value), label: `${value}°` })));
+  populateSelect(roughRakeAngle, RAKE_ANGLES.map((value) => ({ value: String(value), label: `${value}°` })));
+  populateSelect(finishRakeAngle, RAKE_ANGLES.map((value) => ({ value: String(value), label: `${value}°` })));
+  populateSelect(roughApproachAngle, ANGLES.map((value) => ({ value: String(value), label: `${value}°` })));
+  populateSelect(finishApproachAngle, ANGLES.map((value) => ({ value: String(value), label: `${value}°` })));
   segmentsBody.innerHTML = DEFAULT_SEGMENTS.map(renderSegmentRow).join("");
 
   roughToolMaterial.value = "carburi";
@@ -202,8 +206,10 @@ function bootstrap() {
   roughInsertCode.value = "P2";
   finishInsertCode.value = "P2";
   lubrication.value = "media";
-  approachAngle.value = "45";
-  rakeAngle.value = "10";
+  roughRakeAngle.value = "10";
+  finishRakeAngle.value = "10";
+  roughApproachAngle.value = "45";
+  finishApproachAngle.value = "45";
 
   materialCategory.addEventListener("change", syncMaterialInputs);
   form.addEventListener("submit", onSubmit);
@@ -294,13 +300,10 @@ function readFormData() {
     materialValue: number(formData.get("materialValue")),
     density: number(formData.get("density")),
     lubrication: formData.get("lubrication"),
-    approachAngle: number(formData.get("approachAngle")),
-    rakeAngle: number(formData.get("rakeAngle")),
     machinePower: number(formData.get("machinePower")),
     lotSize: number(formData.get("lotSize")),
     approachExtra: number(formData.get("approachExtra")),
     stockDiameter: number(formData.get("stockDiameter")),
-    finishAllowance: number(formData.get("finishAllowance")),
     segments: DEFAULT_SEGMENTS.map((segment, index) => ({
       name: segment.name,
       diameter: number(formData.get(`segmentDiameter${index}`)),
@@ -309,6 +312,8 @@ function readFormData() {
     roughing: {
       toolMaterial: formData.get("roughToolMaterial"),
       insertCode: formData.get("roughInsertCode"),
+      rakeAngle: number(formData.get("roughRakeAngle")),
+      approachAngle: number(formData.get("roughApproachAngle")),
       depth: number(formData.get("roughDepth")),
       feed: number(formData.get("roughFeed")),
       toolLife: number(formData.get("roughToolLife")),
@@ -316,6 +321,8 @@ function readFormData() {
     finishing: {
       toolMaterial: formData.get("finishToolMaterial"),
       insertCode: formData.get("finishInsertCode"),
+      rakeAngle: number(formData.get("finishRakeAngle")),
+      approachAngle: number(formData.get("finishApproachAngle")),
       depth: number(formData.get("finishDepth")),
       feed: number(formData.get("finishFeed")),
       toolLife: number(formData.get("finishToolLife")),
@@ -345,24 +352,6 @@ function validateData(data) {
     }
   });
 
-  if (data.finishing.depth > data.finishAllowance) {
-    messages.push(
-      `Attenzione: la profondita di passata finitura (${formatNumber(data.finishing.depth, 3)} mm) non puo superare il sovrametallo radiale per finitura (${formatNumber(data.finishAllowance, 3)} mm).`
-    );
-  } else if (data.finishing.depth > 0 && data.finishAllowance > 0) {
-    const ratio = data.finishAllowance / data.finishing.depth;
-    if (Math.abs(ratio - Math.round(ratio)) > 1e-9) {
-      const validValues = [];
-      for (let n = 1; n <= 10; n++) {
-        const candidate = data.finishAllowance / n;
-        if (candidate >= 0.01) validValues.push(formatNumber(candidate, 3));
-      }
-      messages.push(
-        `Attenzione: la profondita di passata finitura (${formatNumber(data.finishing.depth, 3)} mm) deve essere una frazione intera del sovrametallo (${formatNumber(data.finishAllowance, 3)} mm). Valori ammessi: ${validValues.join(" mm, ")} mm.`
-      );
-    }
-  }
-
   return { valid: messages.length === 0, messages };
 }
 
@@ -373,9 +362,9 @@ function computeOperation(label, data, operation) {
   const e = lookupE(data.materialKey, operation.toolMaterial);
   const y = lookupY(data.materialKey, operation.insertCode, operation.toolMaterial);
   const lr = lookupLr(operation.toolMaterial, data.lubrication);
-  const x = lookupX(familyKey, data.approachAngle);
+  const x = lookupX(familyKey, operation.approachAngle);
   const v0 = lookupV0(data.materialKey, data.materialValue, operation.insertCode, operation.toolMaterial);
-  const k1 = lookupK1(data.materialKey, data.materialValue, data.rakeAngle);
+  const k1 = lookupK1(data.materialKey, data.materialValue, operation.rakeAngle);
   const r = R_BY_MATERIAL[data.materialKey];
   const h = H_BY_MATERIAL[data.materialKey];
 
@@ -417,7 +406,7 @@ function computeOperation(label, data, operation) {
 function computeSegmentPasses(label, data, operation, cuttingSpeed) {
   const isRoughing = label === "Sgrossatura";
   const roughDiameters = data.segments.map((segment) =>
-    Math.min(data.stockDiameter, segment.diameter + 2 * data.finishAllowance)
+    Math.min(data.stockDiameter, segment.diameter + 2 * data.finishing.depth)
   );
 
   return data.segments.map((segment, segmentIndex) => {
@@ -429,10 +418,10 @@ function computeSegmentPasses(label, data, operation, cuttingSpeed) {
       currentDiameter =
         segmentIndex === data.segments.length - 1
           ? data.stockDiameter
-          : data.segments[segmentIndex + 1].diameter;
+          : roughDiameters[segmentIndex + 1];
     } else {
       targetDiameter = segment.diameter;
-      currentDiameter = Math.min(data.stockDiameter, segment.diameter + 2 * data.finishAllowance);
+      currentDiameter = Math.min(data.stockDiameter, segment.diameter + 2 * data.finishing.depth);
     }
 
     const diametralRemoval = Math.max(0, currentDiameter - targetDiameter);
