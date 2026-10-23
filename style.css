@@ -237,6 +237,56 @@ legend {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.grid.three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.tabs {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  padding: 10px;
+  background: rgba(255, 253, 248, 0.92);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(216, 200, 179, 0.9);
+  border-radius: 999px;
+  box-shadow: var(--shadow);
+}
+
+.tab {
+  flex: 1;
+  border: none;
+  border-radius: 999px;
+  padding: 12px 18px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 180ms ease, color 180ms ease;
+}
+
+.tab:hover {
+  background: var(--accent-soft);
+  color: var(--accent-deep);
+}
+
+.tab.is-active {
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-deep) 100%);
+  color: #fff;
+}
+
+.tab-page {
+  display: none;
+}
+
+.tab-page.is-active {
+  display: block;
+}
+
 label,
 fieldset label {
   display: grid;
@@ -470,9 +520,13 @@ code {
 
 @media (max-width: 1100px) {
   .hero,
-  .layout,
-  .drawing-layout {
+  .drawing-layout,
+  .grid.three {
     grid-template-columns: 1fr;
+  }
+
+  .grid.three {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -483,8 +537,14 @@ code {
   }
 
   .grid.two,
+  .grid.three,
   .results-grid {
     grid-template-columns: 1fr;
+  }
+
+  .tabs {
+    border-radius: 24px;
+    flex-direction: column;
   }
 
   .section-head {
@@ -513,8 +573,17 @@ code {
   }
 
   .button-row,
-  .button {
+  .button,
+  .tabs {
     display: none !important;
+  }
+
+  .tab-page {
+    display: block;
+  }
+
+  .tab-page + .tab-page {
+    margin-top: 24px;
   }
 
   .panel,

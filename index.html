@@ -60,6 +60,13 @@
         </div>
       </section>
 
+      <nav class="tabs" role="tablist" aria-label="Pagine dell'applicazione">
+        <button type="button" class="tab is-active" role="tab" aria-selected="true" data-tab="input">1 · Dati di ingresso</button>
+        <button type="button" class="tab" role="tab" aria-selected="false" data-tab="results">2 · Risultati</button>
+        <button type="button" class="tab" role="tab" aria-selected="false" data-tab="passes">3 · Dettaglio passate</button>
+      </nav>
+
+      <div class="tab-page is-active" data-page="input">
       <section class="panel drawing-panel">
         <div class="section-head">
           <h2>Schema del pezzo</h2>
@@ -159,7 +166,6 @@
         </div>
       </section>
 
-      <section class="layout">
         <form id="turning-form" class="panel form-panel">
           <div class="section-head">
             <h2>Dati di ingresso</h2>
@@ -169,7 +175,7 @@
             </div>
           </div>
 
-          <div class="grid two">
+          <div class="grid three">
             <label>
               <span>Materiale da lavorare</span>
               <select id="materialCategory" name="materialCategory"></select>
@@ -279,7 +285,7 @@
               </label>
               <label>
                 <span>Profondita passata p [mm]</span>
-                <input id="finishDepth" name="finishDepth" type="number" min="0.05" step="0.05" value="0.5" />
+                <input id="finishDepth" name="finishDepth" type="number" min="0" step="0.05" value="0.5" />
               </label>
               <label>
                 <span>Avanzamento a [mm/giro]</span>
@@ -292,7 +298,9 @@
             </fieldset>
           </div>
         </form>
+      </div>
 
+      <div class="tab-page" data-page="results">
         <section class="panel results-panel">
           <div class="section-head">
             <h2>Risultati</h2>
@@ -327,16 +335,28 @@
                 <thead>
                   <tr>
                     <th>Segmento</th>
+                    <th>Lunghezza passata sgrossatura l [mm]</th>
                     <th>Passate sgrossatura</th>
                     <th>Prof. passate sgrossatura [mm]</th>
                     <th>Tempo sgrossatura [min]</th>
+                    <th>Lunghezza passata finitura l [mm]</th>
                     <th>Passate finitura</th>
+                    <th>Prof. passate finitura [mm]</th>
                     <th>Tempo finitura [min]</th>
                   </tr>
                 </thead>
                 <tbody id="segment-results-body"></tbody>
               </table>
             </div>
+          </div>
+
+        </section>
+      </div>
+
+      <div class="tab-page" data-page="passes">
+        <section class="panel results-panel">
+          <div class="section-head">
+            <h2>Dettaglio passate</h2>
           </div>
 
           <div class="panel muted table-panel">
@@ -383,7 +403,7 @@
             </div>
           </div>
         </section>
-      </section>
+      </div>
     </main>
 
     <script src="./script.js"></script>

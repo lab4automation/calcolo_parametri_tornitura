@@ -74,9 +74,8 @@ const Y_BY_INSERT_AND_MATERIAL = {
   "P2": { acciaio: 0.3 },
   "P3-P4": { acciaio: 0.167 },
   "K1": { ghisa: 0.25 },
-  "K1": { ghisa: 0.25 },
-  "N1": { alluminio: 0.41, bronzo: 0.25, ottone: 0.25 },
-  "N1": { alluminio: 0.41, rame: 0.12, bronzo: 0.25, ottone: 0.25 },
+  "N1": { alluminio: 0.41 },
+  "N3": { rame: 0.12, bronzo: 0.25, ottone: 0.25 },
   HSS: { acciaio: 0.15, ghisa: 0.25, rame: 0.12, alluminio: 0.41, bronzo: 0.22, ottone: 0.22 },
 };
 
@@ -146,7 +145,14 @@ const K1_TABLES = {
   },
 };
 
-const INSERT_OPTIONS = ["P1", "P2", "P3-P4", "K1", "N1", "N3", "HSS"];
+const INSERT_OPTIONS_BY_MATERIAL = {
+  acciaio: ["P1", "P2", "P3-P4"],
+  ghisa: ["K1"],
+  alluminio: ["N1"],
+  rame: ["N3"],
+  ottone: ["N3"],
+  bronzo: ["N3"],
+};
 const TOOL_OPTIONS = [
   { value: "carburi", label: "Carburi metallici" },
   { value: "HSS", label: "Acciaio super rapido" },
@@ -192,8 +198,6 @@ function bootstrap() {
   populateSelect(materialCategory, Object.entries(MATERIALS).map(([value, entry]) => ({ value, label: entry.label })));
   populateSelect(roughToolMaterial, TOOL_OPTIONS);
   populateSelect(finishToolMaterial, TOOL_OPTIONS);
-  populateSelect(roughInsertCode, INSERT_OPTIONS.map((value) => ({ value, label: value })));
-  populateSelect(finishInsertCode, INSERT_OPTIONS.map((value) => ({ value, label: value })));
   populateSelect(lubrication, LUBRICATION_OPTIONS);
   populateSelect(roughRakeAngle, RAKE_ANGLES.map((value) => ({ value: String(value), label: `${value}°` })));
   populateSelect(finishRakeAngle, RAKE_ANGLES.map((value) => ({ value: String(value), label: `${value}°` })));
@@ -203,14 +207,15 @@ function bootstrap() {
 
   roughToolMaterial.value = "carburi";
   finishToolMaterial.value = "carburi";
-  roughInsertCode.value = "P2";
-  finishInsertCode.value = "P2";
   lubrication.value = "media";
   roughRakeAngle.value = "10";
   finishRakeAngle.value = "10";
   roughApproachAngle.value = "45";
   finishApproachAngle.value = "45";
 
+  document.querySelectorAll(".tab").forEach((tab) => {
+    tab.addEventListener("click", () => showPage(tab.dataset.tab));
+  });
   materialCategory.addEventListener("change", syncMaterialInputs);
   form.addEventListener("submit", onSubmit);
   exportPdfButton.addEventListener("click", exportToPdf);
@@ -222,6 +227,13 @@ function populateSelect(select, options) {
   select.innerHTML = options
     .map((option) => `<option value="${option.value}">${option.label}</option>`)
     .join("");
+}
+
+function populateInsertSelect(select, materialKey) {
+  const options = INSERT_OPTIONS_BY_MATERIAL[materialKey];
+  const previous = select.value;
+  populateSelect(select, options.map((value) => ({ value, label: value })));
+  select.value = options.includes(previous) ? previous : options.includes("P2") ? "P2" : options[0];
 }
 
 function renderSegmentRow(segment, index) {
@@ -238,12 +250,27 @@ function syncMaterialInputs() {
   const material = MATERIALS[materialCategory.value];
   materialValue.value = material.defaultValue;
   materialValue.previousElementSibling.textContent = `Resistenza / durezza materiale ${material.valueLabel}`;
+  populateInsertSelect(roughInsertCode, materialCategory.value);
+  populateInsertSelect(finishInsertCode, materialCategory.value);
   calculateAndRender();
 }
 
 function onSubmit(event) {
   event.preventDefault();
   calculateAndRender();
+  showPage("results");
+}
+
+function showPage(name) {
+  document.querySelectorAll(".tab").forEach((tab) => {
+    const active = tab.dataset.tab === name;
+    tab.classList.toggle("is-active", active);
+    tab.setAttribute("aria-selected", String(active));
+  });
+  document.querySelectorAll(".tab-page").forEach((page) => {
+    page.classList.toggle("is-active", page.dataset.page === name);
+  });
+  window.scrollTo({ top: 0 });
 }
 
 async function exportToPdf() {
@@ -347,8 +374,9 @@ function validateData(data) {
 
   ["roughing", "finishing"].forEach((key) => {
     const operation = data[key];
-    if (operation.depth <= 0 || operation.feed <= 0 || operation.toolLife <= 0) {
-      messages.push(`I parametri della ${key === "roughing" ? "sgrossatura" : "finitura"} devono essere maggiori di zero.`);
+    const depthInvalid = key === "finishing" ? operation.depth < 0 : operation.depth <= 0;
+    if (depthInvalid || operation.feed <= 0 || operation.toolLife <= 0) {
+      messages.push(`I parametri della ${key === "roughing" ? "sgrossatura" : "finitura"} devono essere maggiori di zero (la profondita di finitura puo essere 0).`);
     }
   });
 
@@ -363,13 +391,17 @@ function computeOperation(label, data, operation) {
   const y = lookupY(data.materialKey, operation.insertCode, operation.toolMaterial);
   const lr = lookupLr(operation.toolMaterial, data.lubrication);
   const x = lookupX(familyKey, operation.approachAngle);
-  const v0 = lookupV0(data.materialKey, data.materialValue, operation.insertCode, operation.toolMaterial);
+  const { value: v0, fallback: v0Fallback } = lookupV0(data.materialKey, data.materialValue, operation.insertCode, operation.toolMaterial);
   const k1 = lookupK1(data.materialKey, data.materialValue, operation.rakeAngle);
   const r = R_BY_MATERIAL[data.materialKey];
   const h = H_BY_MATERIAL[data.materialKey];
 
-  const cuttingSpeed = (v0 / Math.pow(q, z)) * Math.pow(operation.depth / (5 * operation.feed), e) / Math.pow(operation.toolLife / 60, y) * lr * x;
-  const cuttingForce = k1 * Math.pow(q, r) * Math.pow(operation.depth / (5 * operation.feed), h);
+  // Profondita 0 (es. finitura non eseguita): nessuna passata, formule non applicabili.
+  const active = operation.depth > 0;
+  const cuttingSpeed = active
+    ? (v0 / Math.pow(q, z)) * Math.pow(operation.depth / (5 * operation.feed), e) / Math.pow(operation.toolLife / 60, y) * lr * x
+    : 0;
+  const cuttingForce = active ? k1 * Math.pow(q, r) * Math.pow(operation.depth / (5 * operation.feed), h) : 0;
   const cuttingPower = (cuttingForce * cuttingSpeed) / 60000;
   const segmentPasses = computeSegmentPasses(label, data, operation, cuttingSpeed);
   const totalTimePerPiece = segmentPasses.reduce((sum, segment) => sum + segment.timeMin, 0);
@@ -384,6 +416,7 @@ function computeOperation(label, data, operation) {
 
   return {
     label,
+    active,
     q,
     z,
     e,
@@ -391,6 +424,7 @@ function computeOperation(label, data, operation) {
     lr,
     x,
     v0,
+    v0Fallback,
     k1,
     r,
     h,
@@ -424,6 +458,11 @@ function computeSegmentPasses(label, data, operation, cuttingSpeed) {
       currentDiameter = Math.min(data.stockDiameter, segment.diameter + 2 * data.finishing.depth);
     }
 
+    // In sgrossatura le passate fino al diametro di un gradino percorrono anche
+    // i tratti precedenti (piu piccoli); in finitura si segue il solo tratto.
+    const passLength = isRoughing
+      ? data.segments.slice(0, segmentIndex + 1).reduce((sum, item) => sum + item.length, 0)
+      : segment.length;
     const diametralRemoval = Math.max(0, currentDiameter - targetDiameter);
     const passCapacity = 2 * operation.depth;
     const passes = diametralRemoval === 0 ? 0 : Math.ceil(diametralRemoval / passCapacity);
@@ -438,7 +477,7 @@ function computeSegmentPasses(label, data, operation, cuttingSpeed) {
       const passDepth = index < passes - 1
         ? operation.depth
         : (diametralRemoval - (passes - 1) * 2 * operation.depth) / 2;
-      timeMin += (segment.length + data.approachExtra) / (spindleSpeed * operation.feed);
+      timeMin += (passLength + data.approachExtra) / (spindleSpeed * operation.feed);
       passDetails.push({ passDepth, spindleSpeed });
       runningDiameter = nextDiameter;
     }
@@ -446,6 +485,7 @@ function computeSegmentPasses(label, data, operation, cuttingSpeed) {
     return {
       name: segment.name,
       passes,
+      travelLength: passLength,
       timeMin,
       passDepths: passDetails.map((d) => d.passDepth),
       passDetails,
@@ -477,7 +517,9 @@ function computeGeometry(data) {
 function buildMessages(data, rough, finish) {
   const list = [
     `Per la sgrossatura e stata usata la sezione del truciolo Q = p * a = ${formatNumber(rough.q, 3)} mm2.`,
-    `Per la finitura e stata usata la sezione del truciolo Q = p * a = ${formatNumber(finish.q, 3)} mm2.`,
+    finish.active
+      ? `Per la finitura e stata usata la sezione del truciolo Q = p * a = ${formatNumber(finish.q, 3)} mm2.`
+      : "Profondita di passata di finitura = 0: finitura non eseguita, il sovrametallo e zero.",
     `Tempi calcolati sommando le passate sui ${data.segments.length} tratti del pezzo.`,
   ];
 
@@ -489,8 +531,14 @@ function buildMessages(data, rough, finish) {
     list.push(`Attenzione: la potenza di finitura (${formatNumber(finish.cuttingPower)} kW) supera quella disponibile al mandrino.`);
   }
 
+  [["sgrossatura", rough], ["finitura", finish]].forEach(([name, operation]) => {
+    if (operation.active && operation.v0Fallback) {
+      list.push(`Attenzione: per la ${name} la tabella di V0 non riporta un valore per questa combinazione utensile/materiale; e stato usato il dato della fascia piu vicina.`);
+    }
+  });
+
   if (data.materialKey !== "acciaio") {
-    list.push("Per materiali non ferrosi o ghisa alcune tabelle erano parziali: l'app usa il valore tabellato disponibile piu vicino.");
+    list.push("Per materiali non ferrosi o ghisa alcune tabelle erano parziali: per K1 l'app usa il valore tabellato disponibile piu vicino.");
   }
 
   return list;
@@ -582,15 +630,22 @@ function renderSegmentTable(roughSegments, finishSegments) {
       return `
         <tr>
           <td>${segment.name}</td>
+          <td>${segment.passes ? formatNumber(segment.travelLength) : "-"}</td>
           <td>${segment.passes}</td>
-          <td>${segment.passDepths.length === 0 ? "-" : segment.passDepths.map((d) => formatNumber(d)).join("<br>")}</td>
+          <td>${formatPassDepths(segment)}</td>
           <td>${formatNumber(segment.timeMin)}</td>
+          <td>${finish.passes ? formatNumber(finish.travelLength) : "-"}</td>
           <td>${finish.passes}</td>
+          <td>${formatPassDepths(finish)}</td>
           <td>${formatNumber(finish.timeMin)}</td>
         </tr>
       `;
     })
     .join("");
+}
+
+function formatPassDepths(segment) {
+  return segment.passDepths.length === 0 ? "-" : segment.passDepths.map((d) => formatNumber(d)).join("<br>");
 }
 
 function renderPassDetailsTable(rough, finish) {
@@ -619,9 +674,25 @@ function buildPassRows(segments, cuttingSpeed) {
 
 function lookupV0(materialKey, materialValue, insertCode, toolMaterial) {
   const material = MATERIALS[materialKey];
-  const band = material.v0Bands.find((entry) => materialValue >= entry.min && materialValue < entry.max) ?? material.v0Bands.at(-1);
+  const bandIndex = material.v0Bands.findIndex((entry) => materialValue >= entry.min && materialValue < entry.max);
+  const bands = material.v0Bands;
+  const startIndex = bandIndex === -1 ? bands.length - 1 : bandIndex;
   const requestedKey = toolMaterial === "HSS" ? "HSS" : insertCode;
-  return band.values[requestedKey] ?? nearestAvailableValue(band.values);
+
+  if (bands[startIndex].values[requestedKey] !== undefined) {
+    return { value: bands[startIndex].values[requestedKey], fallback: false };
+  }
+
+  if (toolMaterial === "HSS") {
+    // Nessun dato HSS per questa fascia: si usa la fascia di durezza inferiore piu vicina che lo riporta.
+    for (let index = startIndex - 1; index >= 0; index -= 1) {
+      if (bands[index].values.HSS !== undefined) {
+        return { value: bands[index].values.HSS, fallback: true };
+      }
+    }
+  }
+
+  return { value: nearestAvailableValue(bands[startIndex].values), fallback: true };
 }
 
 function lookupE(materialKey, toolMaterial) {
@@ -629,10 +700,8 @@ function lookupE(materialKey, toolMaterial) {
 }
 
 function lookupY(materialKey, insertCode, toolMaterial) {
-  if (Y_BY_INSERT_AND_MATERIAL[insertCode]?.[materialKey] !== undefined) {
-    return Y_BY_INSERT_AND_MATERIAL[insertCode][materialKey];
-  }
-  return Y_BY_INSERT_AND_MATERIAL[toolMaterial]?.[materialKey] ?? nearestAvailableValue(Y_BY_INSERT_AND_MATERIAL[insertCode] ?? {});
+  const key = toolMaterial === "HSS" ? "HSS" : insertCode;
+  return Y_BY_INSERT_AND_MATERIAL[key][materialKey];
 }
 
 function lookupLr(toolMaterial, lubricationKey) {
